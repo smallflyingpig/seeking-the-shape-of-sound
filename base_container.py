@@ -114,7 +114,7 @@ class BaseContainer(object):
                     betas=item.get('betas', (0.9, 0.999))
                 )
             else:
-                raiseNotImplementedError(
+                raise NotImplementedError(
                     "optimizer %s not implemented!"%item.optim_method)
 
     def reset_batchsize(self):

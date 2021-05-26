@@ -1,20 +1,12 @@
 from .base_dataset import BaseDataset
 from .base_dataset import pil_loader
 import numpy as np
-import io
 import os
 import os.path as osp
 import torch
 from utils.logger import logger
-import importlib
-import random
-import cv2
-import time
 import csv
-from collections import namedtuple
-import lmdb
-from tqdm import tqdm
-import pickle
+from copy import deepcopy
 
 
 class MMDataset(BaseDataset):
@@ -184,3 +176,67 @@ class MMDataset(BaseDataset):
 
     def __getitem__(self, idx):
         return self.getitem(idx)
+
+
+class AttackMMDataset(BaseDataset):
+    def __init__(self, args, split='test'):
+        super().__init__(args)
+        self.root_dir_image = args.image_data_dir
+        self.root_dir_audio = args.audio_data_dir
+        self.list_dir = args.list_dir
+        self.data_list = self.get_test_pairs()
+        print(f"total paired data: {len(self.data_list)}")
+
+        self.split = split
+        if split == 'train':
+            args.train_list = os.path.join(args.list_dir, args.dataset_train+'.csv')
+            self.transform = self.transform_train()
+            _data_list = args.train_list
+        elif split == 'val':
+            args.val_list = os.path.join(args.list_dir, args.dataset_val+'.csv')
+            self.transform = self.transform_validation()
+            _data_list = args.val_list
+        elif split == 'test':
+            args.test_list = os.path.join(args.list_dir, args.dataset_test+'.csv')
+            self.transform = self.transform_validation()
+            _data_list = args.test_list
+        else:
+            raise ValueError
+
+    
+    def get_test_pairs(self):
+        with open(osp.join(self.args.list_dir, "attack_gallery_files.txt"), 'r') as fp:
+            data = fp.readlines()
+        data = [l.strip().split(',') for l in data]
+        pair_list = []
+
+        for line in data:
+            line_img, line_aud = line[:len(line)//2], line[len(line)//2:]
+            target_img, target_aud = line_img[0], line_aud[0]
+            label = [1] + [0] * (len(line_img)-1)
+            for paired_img, paired_aud, paired_label in zip(line_img[1:], line_aud[1:], label):
+                _d = {"img":target_img, "wav": target_aud, "img2": paired_img, "wav2": paired_aud, "label": paired_label}
+                pair_list.append(_d)
+        return pair_list
+        
+    def __str__(self):
+        return self.args.data_dir + '  split=' + str(self.split)
+
+    def __len__(self):
+        return len(self.data_list)
+
+    def __getitem__(self, index):
+        d = deepcopy(self.data_list[index])
+        d['filename_wav'] = d['wav']
+        d['wav'] = pil_loader(osp.join(self.root_dir_audio, d['filename_wav']))
+        d['filename_wav2'] = d['wav2']
+        d['wav2'] = pil_loader(osp.join(self.root_dir_audio, d['filename_wav2']))
+
+        d['filename_img'] = d['img']
+        d['img'] = (pil_loader(osp.join(self.root_dir_image, d['filename_img'])))
+        d['filename_img2'] = d['img2']
+        d['img2'] = (pil_loader(osp.join(self.root_dir_image, d['filename_img2'])))
+        d = self.transform(d)
+        return d 
+
+    

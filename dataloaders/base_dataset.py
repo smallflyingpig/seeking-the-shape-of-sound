@@ -15,12 +15,13 @@ import librosa
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 def pil_loader(filename, label=False):
     ext = os.path.splitext(filename)[-1]
+    assert os.path.exists(filename)
     if ext == '.png' or ext == '.jpeg' or ext == '.ppm' or ext == '.jpg':
         img = Image.open(filename)
         if not label:
             img = img.convert('RGB')
             img = np.array(img).astype(dtype=np.uint8)
-            img = img[:,:,::-1]  #convert to BGR
+            img = img[:,:,::-1].copy()  #convert to BGR
         else:
             if img.mode != 'L' and img.mode != 'P':
                 img = img.convert('L')

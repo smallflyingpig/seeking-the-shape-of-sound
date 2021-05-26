@@ -4,6 +4,8 @@ import numpy as np
 import cv2
 import math
 
+from torch._C import Value
+
 
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
@@ -14,14 +16,14 @@ class ToTensor(object):
         # swap color axis because
         # numpy image: H x W x C
         # torch image: C X H X W
-            if 'image' == key:
+            if 'image' == key or key.startswith('img'):
                 img = sample[key]
                 if len(img.shape) == 2:
                     img = np.expand_dims(img, axis=0).copy()
                 else:
                     img = img.transpose((2, 0, 1)).copy()
                 sample[key] = torch.from_numpy(img).float()
-            elif 'audio' == key:
+            elif 'audio' == key or key.startswith('wav'):
                 aud = sample[key]
                 sample[key] = torch.from_numpy(aud).float()
             elif 'label' in key:
@@ -35,7 +37,7 @@ class RandomHorizontalFlip(object):
         if np.random.rand() < 0.5:
             key_list = sample.keys()
             for key in key_list:
-                if 'image' not in key:
+                if 'image' not in key and not key.startswith('img'):
                     continue
                 image = sample[key]
                 image_flip = np.flip(image, axis=1)
@@ -59,7 +61,7 @@ class RandomRotate(object):
         Hsin = math.sin(Hangle)
         key_list = sample.keys()
         for key in key_list:
-            if 'image' not in key:
+            if 'image' not in key and not key.startswith('img'):
                 continue
             image = sample[key]
             imgsize = image.shape
@@ -88,8 +90,8 @@ class RandomRotate(object):
                 Width = abs(x1[2] - x1[0])
             row, col = image.shape[:2]
             m = cv2.getRotationMatrix2D(center=(col/2, row/2), angle=rand_angle, scale=1)
-            new_image = cv2.warpAffine(image, m, (Width,Height), flags=cv2.INTER_LINEAR if 'image' in key else self.seg_interpolation, 
-                borderValue=self.IMAGE_VALUE if 'image' in key else self.MASK_VALUE)
+            new_image = cv2.warpAffine(image, m, (Width,Height), flags=cv2.INTER_LINEAR if ('image' in key or key.startswith('img')) else self.seg_interpolation, 
+                borderValue=self.IMAGE_VALUE if ('image' in key or key.startswith('img')) else self.MASK_VALUE)
             sample[key] = new_image
         return sample
 
@@ -103,9 +105,15 @@ class Resize(object):
         self.seg_interpolation = cv2.INTER_LINEAR if is_continuous else cv2.INTER_NEAREST
     
     def __call__(self,sample):
-        if not 'image' in sample.keys():
+        if not 'image' in sample.keys() and not 'img' in sample.keys():
             return sample
-        img = sample['image']
+        if 'image' in sample.keys():
+            img = sample['image']
+        elif 'img' in sample.keys():
+            img = sample['img']
+        else:
+            raise ValueError
+
         image_shape = list(img.shape)
         if self.output_size[0] / float(image_shape[0]) <= \
              self.output_size[1] / float(image_shape[1]):
@@ -117,11 +125,11 @@ class Resize(object):
 
         key_list = sample.keys()
         for key in key_list:
-            if key != 'image':
+            if key != 'image' and not key.startswith('img'):
                 continue
             img = sample[key]
             h, w = img.shape[:2]
-            img = cv2.resize(img, dsize=(out_w,out_h), interpolation=cv2.INTER_LINEAR if 'image' in key else self.seg_interpolation)
+            img = cv2.resize(img, dsize=(out_w,out_h), interpolation=cv2.INTER_LINEAR if ('image' in key or key.startswith('img')) else self.seg_interpolation)
             sample[key] = img
         
         return sample
@@ -139,7 +147,7 @@ class RandomCrop(object):
         rand_pad = random.uniform(0, 1)
         key_list = sample.keys()
         for key in key_list:
-            if 'image' not in key:
+            if 'image' not in key and not key.startswith('img'):
                 continue
             img = sample[key]
             h,w = img.shape[:2]

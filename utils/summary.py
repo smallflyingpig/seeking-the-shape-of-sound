@@ -4,7 +4,6 @@ from torchvision.utils import make_grid
 from tensorboardX import SummaryWriter
 import numpy as np
 import cv2
-import matplotlib
 import random
 
 class TensorboardSummary(object):

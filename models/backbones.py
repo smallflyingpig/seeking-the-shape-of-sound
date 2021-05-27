@@ -9,12 +9,21 @@ from models.nn.res_se_34l_model import ResNetSE34
 from models.nn.module import NormalizeConv, MultiLayerPerceptron, Conv1dModule, LinearModule
 
 
+
 class SEResNet50IR(BaseModel):
     def __init__(self, args):
         super(SEResNet50IR, self).__init__(args)
         output_channel = self.args.output_channel
         self.model = IR_50([112, 112], pretrained='pretrained_models/backbone_ir50_ms1m_epoch120.pth')
         self.fc = nn.Sequential(
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Linear(512, output_channel, bias=False),
+            nn.Dropout(0.5),
+            nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Linear(512, output_channel, bias=False),
+            nn.Dropout(0.5),
             nn.BatchNorm1d(512),
             nn.ReLU(inplace=True),
             nn.Linear(512, output_channel, bias=False),

@@ -7,7 +7,7 @@ import time
 from base_container import BaseContainer
 from utils.summary import TensorboardSummary
 from utils.logger import logger, set_logger_path
-from utils.utils import Saver
+from utils.utils import Saver, sys_command
 from utils.metrics import Evaluator
 
 
@@ -23,7 +23,11 @@ class Trainer(BaseContainer):
             '%s.log' % now_time
         )
         set_logger_path(logger_path)
-        logger.info(self.args)
+        logger.info(vars(self.args))
+        logger.info("list the branch:")
+        logger.info(sys_command('git branch'))
+        logger.info("the latest 5 commits:")
+        logger.info(sys_command('git --no-pager log -n 5'))
 
         # Define Saver
         self.saver = Saver(self.args)
@@ -31,7 +35,6 @@ class Trainer(BaseContainer):
         # Define Tensorboard Summary
         self.summary = TensorboardSummary()
         self.writer = self.summary.create_summary(self.saver.experiment_dir, self.args.models)
-
 
         self.init_training_container()
         self.batchsize = self.args.training.batchsize

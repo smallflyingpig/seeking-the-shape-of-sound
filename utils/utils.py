@@ -130,3 +130,14 @@ def load_pretrained_model(model, state_dict):
             logger.info('this param of the checkpoint dont in the model: {}'.format(k))
     model.load_state_dict(model_state, strict=False)
     logger.info('success for loading pretrained model params {}/{}!'.format(str(num), str(total)))
+
+
+import os
+import subprocess
+def sys_command(cmd, output=True):
+    cmd = cmd.split(' ')
+    cmd_rtn = subprocess.run(cmd, capture_output=output)
+    if output:
+        return cmd_rtn.stdout.decode('utf8')
+    else:
+        return None

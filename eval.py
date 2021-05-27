@@ -34,9 +34,11 @@ class NetworkTester(BaseContainer):
             auds, aud_filenames, aud_gender = array2tensor_aud(sample_aud)
             with torch.no_grad():
                 imgs = self.model.normalize(imgs.cuda())
+                img_feats = self.model.F(imgs).detach()
+                del imgs
                 auds = auds.cuda()
-                img_feats = self.model.F(imgs)
-                aud_feats = self.model.V(auds)
+                aud_feats = self.model.V(auds).detach()
+                del auds
                 if 'wang' in save_path:
                     img_feats = self.model.F.shared_fc(img_feats)
                     aud_feats = self.model.F.shared_fc(aud_feats)

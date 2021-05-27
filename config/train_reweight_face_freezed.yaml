@@ -58,13 +58,13 @@ dataset:
 
 ######### train parameter
 training:
-  save_dir: ./save
+  save_dir: ./save_face_freezed
   experiment_id: re-weighting
   ft: True
   optimizer:
     match:
       train_params:
-        - F
+        # - F
         - V
         - center
       loss_weight:

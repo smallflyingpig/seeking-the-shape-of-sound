@@ -1,5 +1,4 @@
- ######### model parameter
-
+######### model parameter
 models:
   model_warpper: Voice2Face
   conponents:
@@ -44,8 +43,8 @@ dataset:
   dataset_train: vox1_train
   dataset_val: vox1_val
   dataset_test: vox1_test
-  eval_triplet_val: match_g_v2f_2_val
-  eval_triplet_test: match_g_v2f_2_test
+  eval_triplet_val: match_v2f_2_val
+  eval_triplet_test: match_v2f_2_test
   image_data_dir: ./data/VGG_ALL_FRONTAL
   audio_data_dir: ./data/wav
   list_dir: ./data/list_wav
@@ -58,13 +57,13 @@ dataset:
 
 ######### train parameter
 training:
-  save_dir: ./save
-  experiment_id: re-weighting
+  save_dir: ./save_face_freezed
+  experiment_id: main
   ft: True
   optimizer:
     match:
       train_params:
-        - F
+        # - F
         - V
         - center
       loss_weight:
@@ -76,16 +75,47 @@ training:
       momentum: 0.9
       weight_decay: 0.0001
       lr_decay_iter:
-        - 1000
         - 2000
+        - 3000
       lr_decay: 0.1
 
-  weight_update_iter: 100
+  weight_update_iter: -1
   start_eval_it: 1000
   val_iter: 1000
-  save_iter: 10000 # save a checkpoint
-  max_iter: 2400
+  save_iter: 1000 # save a checkpoint
+  max_iter: 10000
   num_workers: 8
   batchsize: 64
   no_cuda: False
-  resume_train: none
+  resume_train: ./save_face_freezed/vox1_train/Voice2Face/re-weighting/id_weight.pth
+
+######### evaluation parameter
+evaluation:
+  dataset:
+    modal: 'both'
+    pair: False
+    triple: False
+    dataset_test: vox1_test
+    eval_triplet_test_all: # match_test
+      - match_g_v2f_2_test
+      - match_g_f2v_2_test
+      - match_v2f_2_test
+      - match_f2v_2_test
+      - verify_g_v2f_test
+      - verify_g_f2v_test
+      - verify_v2f_test
+      - verify_f2v_test
+      - reterival_v2f_test
+      - reterival_f2v_test
+    image_data_dir: ./data/VGG_ALL_FRONTAL
+    audio_data_dir: ./data/wav
+    list_dir: ./data/list_wav
+    resize:
+      - 112
+      - 112
+    input_size:
+      - 112
+      - 112
+  save_feat: ./save_face_freezed/feat.pth
+  save_result: ./save_face_freezed/result.txt
+  resume_eval: save_face_freezed/vox1_train/Voice2Face/main/best.pth.tar

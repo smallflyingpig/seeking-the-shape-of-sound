@@ -80,9 +80,9 @@ training:
       lr_decay: 0.1
 
   weight_update_iter: -1
-  start_eval_it: 2000
-  val_iter: 2000
-  save_iter: 2000 # save a checkpoint
+  start_eval_it: 1000
+  val_iter: 1000
+  save_iter: 1000 # save a checkpoint
   max_iter: 10000
   num_workers: 8
   batchsize: 64

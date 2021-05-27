@@ -18,11 +18,11 @@ class SEResNet50IR(BaseModel):
         self.fc = nn.Sequential(
             nn.BatchNorm1d(512),
             nn.ReLU(inplace=True),
-            nn.Linear(512, output_channel, bias=False),
+            nn.Linear(512, 512, bias=False),
             nn.Dropout(0.5),
             nn.BatchNorm1d(512),
             nn.ReLU(inplace=True),
-            nn.Linear(512, output_channel, bias=False),
+            nn.Linear(512, 512, bias=False),
             nn.Dropout(0.5),
             nn.BatchNorm1d(512),
             nn.ReLU(inplace=True),
@@ -52,7 +52,6 @@ class ThinResNet34(BaseModel):
         x = self.model(x)
         x = self.fc(x)
         return x
-
 
 class Classifier(nn.Module):
     def __init__(self, nin, nout, vote=False):

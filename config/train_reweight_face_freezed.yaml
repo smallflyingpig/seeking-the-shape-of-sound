@@ -5,7 +5,7 @@ models:
   conponents:
     F:
       model: SEResNet50IR
-      freeze: False
+      freeze: True
       output_channel: 128
       num_classes: 924
       bn: BatchNorm
@@ -64,7 +64,7 @@ training:
   optimizer:
     match:
       train_params:
-        # - F
+        - F
         - V
         - center
       loss_weight:
